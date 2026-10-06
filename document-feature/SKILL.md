@@ -7,7 +7,7 @@ description: Use when writing new feature documentation or refactoring existing 
 
 ## Overview
 
-Guides the writing and refactoring of feature documentation in `documentation/` using a standardized template that serves both technical users (developers, AI agents) and business users (product managers, protocol admins).
+Guides the writing and refactoring of feature documentation in `documentation/` using a standardized template that serves both technical users (developers, AI agents) and business users (product managers, system admins).
 
 ## When to Use
 
@@ -75,9 +75,9 @@ Only proceed with decomposition if the user confirms.
 ### Step 4: Explore the Codebase
 
 Use Grep, Glob, and Read to understand the feature's implementation:
-- Find relevant files (collections, helpers, methods, UI components)
+- Find relevant files (data models, helpers, methods, UI components)
 - Read key functions and understand the flow
-- Note collection schemas and field definitions
+- Note data model schemas and field definitions
 - Identify external integrations or dependencies
 
 ### Step 5: Refactor Plan (Refactor Mode Only)
@@ -89,12 +89,12 @@ Read the existing doc and present a brief plan before making changes:
 - Business logic gaps that need user input
 
 Example:
-> "Here's what I'd change in `customer-state-management.md`:
+> "Here's what I'd change in `order-fulfilment.md`:
 > - Add YAML frontmatter
 > - Extract 5 business rules from the prose into a numbered list
 > - Add Key Files table (currently missing)
 > - Add Process Flow section
-> - Flag: the doc mentions state validation but doesn't list the actual states — I'll need your input"
+> - Flag: the doc mentions order status transitions but doesn't list the valid statuses — I'll need your input"
 
 ### Step 6: Draft "What does this feature do?"
 
@@ -121,7 +121,7 @@ This section is the **authoritative source** for how the feature should behave. 
 
 ### Step 8: Draft "Technical Implementation"
 
-Write for developers and AI agents. Reference specific file paths, collection schemas, and function names.
+Write for developers and AI agents. Reference specific file paths, data model schemas, and function names.
 
 **Required subsections:**
 
@@ -135,7 +135,7 @@ Write for developers and AI agents. Reference specific file paths, collection sc
 **Process Flow** — always include. Step-by-step workflow showing how the feature executes, with function names and file references.
 
 **Optional subsections** — include whichever are relevant to the feature:
-- **Data Model** — collection schemas, field definitions, relationships
+- **Data Model** — schemas (tables, collections, etc.), field definitions, relationships
 - **API Surface** — endpoints, parameters, responses
 - **UI Components** — templates, forms, user interactions
 - **Scheduled Jobs** — cron jobs, queued tasks, background processing
@@ -229,7 +229,3 @@ Technical Implementation should only be a reflection of these rules in code.]
 ## Known Risks / Weaknesses
 [Fragile points, edge cases, tech debt]
 ```
-
-## Reference Implementation
-
-`documentation/business-logic/reply-rate-tracking.md` demonstrates this template applied to a small, well-contained feature. Use it as a reference for quality and tone.
