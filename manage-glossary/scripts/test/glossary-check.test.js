@@ -398,6 +398,74 @@ test('mentions list each identifier once per file, with every group it points to
   assert.match(text, /0 candidates and 1 mention in 1 changed files/);
 });
 
+test('only_in limits a lost variant to its paths, and the group\'s own code is never flagged', () => {
+  const people = `---
+schema: 1
+group: People
+code: [Customers, customerId]
+avoid:
+  - term: customer
+    reason: "frontend says patient"
+    only_in: [src/web/**]
+  - term: patient
+    reason: "backend says customer"
+    only_in: [src/server/**]
+---
+# People
+`;
+  const index = INDEX.replace('| job |', '| customer | [People](people.md) |\n| patient | [People](people.md) |\n| job |');
+  const root = makeRepo({
+    [`${GLOSSARY}/INDEX.md`]: index,
+    [`${GLOSSARY}/people.md`]: people,
+    'src/server/db.ts': 'export const Customers = {};\nexport const customerId = 1;\n',
+    'src/web/existing.ts': 'export const placeholder = 1;\n',
+  });
+  write(root, 'src/web/list.tsx', 'const customerList = [];\nconst patientList = [];\nconst x = row.customerId;\n');
+  write(root, 'src/server/stats.ts', 'const patientCount = 1;\nconst customerCount = 2;\nCustomers.find();\n');
+  write(root, 'src/shared/both.ts', 'const customerThing = 1;\nconst patientThing = 2;\n');
+  const result = runJson(root, '--diff', 'HEAD');
+  assert.deepEqual(result.candidates.map((c) => `${c.file}:${c.identifier}`).sort(), [
+    'src/server/stats.ts:patientCount',
+    'src/web/list.tsx:customerList',
+  ]);
+  assert.deepEqual(result.integrity.problems, []);
+});
+
+test('--integrity reports only_in globs that match nothing, and only_in on a reserved term', () => {
+  const root = makeRepo({
+    [`${GLOSSARY}/order.md`]: ORDER.replace('    reason: "use paymentState"', '    reason: "use paymentState"\n    only_in: [src/nowhere/**]'),
+    [`${GLOSSARY}/fulfilment.md`]: FULFILMENT.replace('    reserved_by: Order', '    reserved_by: Order\n    only_in: [src/**]'),
+  });
+  const { problems, warnings } = runJson(root, '--integrity').integrity;
+  assert.ok(problems.some((p) => /only_in glob `src\/nowhere\/\*\*`/.test(p.message)));
+  assert.ok(warnings.some((w) => /both reserved_by and only_in/.test(w.message)));
+});
+
+test('a match inside a longer indexed term isn\'t flagged', () => {
+  const index = INDEX.replace('| order |', '| order line item | [Order](order.md) |\n| order |');
+  const root = makeRepo({ [`${GLOSSARY}/INDEX.md`]: index });
+  write(root, 'src/fulfilment/lines.ts', 'const orderLineItems = [];\nconst activeOrders = [];\nconst orderLineCount = 1;\n');
+  const result = runJson(root, '--diff', 'HEAD');
+  assert.deepEqual(ids(result), ['activeOrders', 'orderLineCount']);
+});
+
+test('family groups: term index anchors, multi-word group names, and vocabulary from the index only', () => {
+  const index = INDEX
+    .replace('| fulfilment | [Fulfilment](fulfilment.md) |', '| fulfilment | [Service delivery](fulfilment.md#fulfilment) |\n| visit | [Service delivery](fulfilment.md#visit) |')
+    .replace('| job | [Fulfilment](fulfilment.md) (business name) |', '| job | [Service delivery](fulfilment.md#fulfilment) (business name) |');
+  const root = makeRepo({
+    [`${GLOSSARY}/INDEX.md`]: index,
+    [`${GLOSSARY}/fulfilment.md`]: FULFILMENT.replace('group: Fulfilment', 'group: Service delivery').replace('activeFulfilments]', 'activeFulfilments, Visit]'),
+    'src/fulfilment/model.ts': `${FULFILMENT_CODE}export class Visit {}\n`,
+  });
+  const integrity = runJson(root, '--integrity').integrity;
+  assert.deepEqual(integrity.problems, []);
+
+  write(root, 'src/reports/crew.ts', 'const missedVisits = [];\nconst serviceDeliveryReport = {};\n');
+  const result = runJson(root, '--diff', 'HEAD');
+  assert.deepEqual(result.mentions.map((m) => `${m.identifier}:${m.groups[0].group}:${m.groups[0].term}`), ['missedVisits:Service delivery:visit']);
+});
+
 test('--paths doesn\'t list mentions', () => {
   const root = makeRepo({ 'src/reports/old.ts': 'export const recentOrders = [];\n' });
   const result = runJson(root, '--paths', 'src/**');

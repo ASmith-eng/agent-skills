@@ -22,7 +22,7 @@ Bring an existing glossary up to date with the code, apply findings passed on fr
    - every file's frontmatter follows the subset in `schema.md`
    - every `code` identifier is still found outside the glossary (`git grep -w <id>`)
    - every `reserved_by` names a group that exists
-   - every `paths` glob matches at least one file
+   - every `paths` and `only_in` glob matches at least one file
    - every term index link points to a group file and uses its `group` name, and every group file is linked
 6. **Compare against the code** for the scope:
    - **New entities** not in the glossary: models, tables and types added since `reconciled_at`. Use `discovery.md` to find them in this stack.
@@ -52,7 +52,7 @@ Finish with one line per change applied, the integrity result, and a reminder th
 |---|---|
 | Update: add to `allow` | Add the identifier to the `allow` list of that Avoid entry, in the group that holds it. |
 | Update: change the decision | The Avoid term is now accepted. Remove the entry, add the term to the right group, and decide (with the user) whether the old winner becomes a lost variant. |
-| Update: add it to the glossary | Add the term to an existing group, or create a new group file from `template.md`. Then add it to the term index, and propose `paths` and any reserved terms. |
+| Update: add it to the glossary | Add the term to the family it belongs to: a new section for a new entity, or a line in an existing section. Create a new group file from `template.md` only for a new family, and split a family only when its file has grown past about 150 lines. Then add the term to the term index, and propose any `paths` or reserved terms. |
 | Update: change the rule | Edit the naming rule in INDEX.md, keeping one example. |
 
 ## Schema migration

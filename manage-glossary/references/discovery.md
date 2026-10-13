@@ -46,6 +46,16 @@ git log --since='12 months ago' --format= --name-only -S'Customer' | sort -u | w
 
 `-w` matches whole words, so it misses `activeClients`. For compound names, also search case-insensitively for the bare word and skim the hits. Exclude generated code, vendored code and fixtures when you report counts.
 
+## Spotting families
+
+Group entities into families as you go, because each family becomes one group file. Signs that entities belong together:
+
+- they share a folder or module, or their files sit side by side in type-based folders (`Protocol.js` and `CustomerProtocol.js`)
+- they reference each other by key (`protocolId` on an assignment, `templateIds` on a protocol)
+- one is created from another, or they move through one workflow (definition → assignment → execution)
+- the existing docs describe them together, in one architecture page or one docs section
+- the same features change them together (`git log --format= --name-only` shows the files in the same commits)
+
 ## Spotting synonyms
 
 These are guesses until the user confirms them:

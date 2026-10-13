@@ -50,17 +50,17 @@ Always a directory, even when it's small, so the format never changes as it grow
 ```
 glossary/
   INDEX.md        watch list, term index, naming rules, open decisions
-  <group>.md      one file per group (a data entity or feature)
+  <group>.md      one file per group: a feature, workflow or entity family
 ```
 
-- **INDEX.md** is the only file an agent must read before naming things. Its sections, in this order:
+- **INDEX.md** is the entry file. Check reads it first, and reads group files only when a finding needs them. Agents aren't asked to read the glossary before coding; Check sweeps the diff afterwards, like a linter. Its sections, in this order:
   1. **Watch list:** the three to seven collisions or Avoid terms most likely to cause harm.
   2. **Term index:** every term in alphabetical order, with the group it belongs to.
   3. **Naming rules:** the team's house rules, each with one example. All naming rules live here.
   4. **Open decisions:** anything deferred or unsure.
-- **Group files** have frontmatter with the decisions the script checks (`group`, `paths`, `code`, `avoid`). The body is prose: the definition, business name, relationships and vocabulary. Code identifiers and Avoid entries live **only** in the frontmatter, so the two can't drift apart.
+- **Group files** each cover a family of entities that are built and changed together, not one entity. The frontmatter holds the decisions the script checks (`group`, `paths`, `code`, `avoid`). The body is prose: a short overview of the family, then a section per entity with its definition, business name, relationships and vocabulary. Code identifiers and Avoid entries live **only** in the frontmatter, so the two can't drift apart.
 - **Avoid entries** come in two kinds:
-  - **Lost variants** (a `reason`, no `reserved_by`) are wrong anywhere in new code.
+  - **Lost variants** (a `reason`, no `reserved_by`) are wrong anywhere in new code, or only in their `only_in` paths.
   - **Reserved terms** (`reserved_by: <group>`) belong to another group, and are wrong only inside this group's `paths`.
 
 `references/template.md` has the exact structure. `references/schema.md` has the frontmatter fields and the limited YAML subset the frontmatter must use.

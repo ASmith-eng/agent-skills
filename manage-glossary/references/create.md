@@ -9,7 +9,7 @@ Write a new glossary. Follow the principles in `SKILL.md` throughout.
 3. **Discover.** Read `discovery.md` and work through its sources for the scope. Keep a working list of findings: each term, its code names with counts and locations, its business name, and anything that conflicts.
 4. **Classify** each finding (below).
 5. **Ask about decisions.** Read `questions.md`, then ask in batches.
-6. **Confirm group paths.** For each group, propose `paths` globs from where its code lives, and let the user correct them. Leave `paths` empty for concepts that span the codebase (a `User` touched everywhere). Paths matter: reserved terms are only flagged inside them.
+6. **Confirm the groups and their paths.** Propose the groups: families of entities that share paths, are changed in the same features, or flow into each other (`template.md` says what belongs together). For each, list its entities and propose `paths` globs from where its code lives. The user corrects both in one step. Leave `paths` empty for families that span the codebase (the users of the system). Paths matter: reserved terms between groups are only flagged inside them.
 7. **Draft and get approval.** Read `template.md` and the files in `example-glossary/`, then draft every file in full. Model the depth and tone on the example, but never copy its terms. Show the user the whole draft:
    - Consistent findings are listed compactly so the user can scan them.
    - Decisions are shown as made, and Avoid reasons as drafted.
@@ -32,30 +32,30 @@ Write a new glossary. Follow the principles in `SKILL.md` throughout.
 
 **Expect many conflicts.** On a messy codebase, rank them by impact (how many files use each variant, and whether the term crosses domains) and ask about the top ones. Collisions come first, because they cause the most harm. Aim for about 12 decisions per session (three batches of four). The rest go under Open decisions for a later Update. The user can ask to keep going.
 
-**"Both are right" is a valid answer** only with a rule for when each applies, for example `Customer` for the billing entity and `Client` for the API consumer. Then they're two entries, not synonyms, and each probably reserves the other's word.
+**"Both are right" is a valid answer** only with a rule for when each applies. If they're two concepts (`Customer` for the billing entity, `Client` for the API consumer), they're two entries, not synonyms, and each probably reserves the other's word. If it's one concept named differently by layer (`customer` in backend code, `patient` in frontend code), record the rule under Naming rules and add each word as a lost variant with `only_in` set to the layers where it's wrong (`schema.md`).
 
 **Reasons for Avoid entries:** draft the reason from the evidence ("legacy name, only in `legacy/`, last touched 2023") and let the user correct it while reviewing the draft. Don't spend a question on it.
 
 **Business names** go in the group body. Add them as lost variants ("UI-only name") only when there's evidence they leak into code, or the user says they shouldn't be used there.
 
-**Collisions become a pair of reserved terms.** If "order" and "fulfilment" are confirmed separate:
-- Fulfilment's `avoid` gets `term: order, reserved_by: Order`.
-- Order's `avoid` gets `term: fulfilment, reserved_by: Fulfilment`, plus the Fulfilment business name ("job") if it's a risk there too.
+**Collisions between groups become a pair of reserved terms.** If "order" (Bookings) and "fulfilment" (Service delivery) are confirmed separate:
+- Service delivery's `avoid` gets `term: order, reserved_by: Bookings`.
+- Bookings' `avoid` gets `term: fulfilment, reserved_by: Service delivery`, plus the Fulfilment business name ("job") if it's a risk there too.
 
-Add an `allow` entry for each identifier in the group's paths that contains the word but is fine (`sortOrder`, `orderBy`). Find them with `--paths` on the group's own paths after writing. The owning group's own `code` identifiers are allowed automatically (`schema.md`).
+Add an `allow` entry for each identifier in the group's paths that contains the word but is fine (`sortOrder`, `orderBy`). Find them with `--paths` on the group's own paths before writing. The owning group's own `code` identifiers are allowed automatically (`schema.md`). If `--paths` flags many of the group's own compound names (`customerProtocolId` when "protocol" is reserved), the reserved term costs more than it catches. Drop it and rely on the watch list and Check's mentions.
+
+**Collisions inside one group** (two of its entities share a word, like a Protocol and a patient's assigned CustomerProtocol) can't be reserved terms, because both sides share the group's paths. Put them on the watch list, and make each entity section say which one the word means.
 
 ## Wiring
 
 After writing, offer these. Don't apply them automatically.
 
 - **Docs index:** if `documentation/INDEX.md` (or the project's equivalent) exists, add an entry under a Conventions section, creating that section if needed.
-- **CLAUDE.md or AGENTS.md:** offer two lines, using the real glossary path:
+- **CLAUDE.md or AGENTS.md:** offer one line:
 
-  > Before naming new entities, variables or functions, read `documentation/conventions/glossary/INDEX.md` and the group files for the area you're working in. If a name belongs to a different group than the one you're working in, don't use it. Never use Avoid terms, and ask if a concept isn't listed.
+  > When you finish a feature, offer to run the `manage-glossary` skill's Check mode on your changes.
 
-  > When you finish a feature, run the `manage-glossary` skill's Check mode on your changes.
-
-Don't copy the watch list into CLAUDE.md. It stays at the top of INDEX.md, so there's one copy to maintain.
+The glossary works as a sweep after the feature, like a linter. Don't tell agents to read it before they start: that costs tokens on every task, and Check catches what matters in the diff. Don't copy the watch list into CLAUDE.md either. It stays at the top of INDEX.md, where Check reads it, so there's one copy to maintain.
 
 ## Finish
 

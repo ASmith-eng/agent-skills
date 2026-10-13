@@ -10,7 +10,7 @@ Agents name things with whatever word seems plausible. In an established codebas
 ## What it's for
 
 - **Creating a glossary.** The skill reads your data model, migrations, UI copy and docs. It finds the terms, the synonyms and the collisions, and asks you to decide only what the code can't settle. Questions are multiple choice and come with evidence: counts, locations and which variant newer code uses.
-- **Checking your changes against it.** After a feature or before a PR, Check looks at the new names in your changes, not the whole codebase. It reports names that use an Avoid term, borrow another concept's word, hold another concept's data, or introduce a new domain term. Each finding has the agent's opinion and your options.
+- **Checking your changes against it.** After a feature or before a PR, Check looks at the new names in your changes, not the whole codebase. It reports names that use an Avoid term, borrow another concept's word, hold another concept's data, or introduce a new domain term. The report is built for skimming. Each finding leads with the suggested rename (`protocolsToPause` → `customerProtocolsToPause`), followed by a one-line reason. Findings are grouped into **Fix** and **Decide**, so you can see what needs your input at a glance.
 - **Keeping it up to date.** Update reconciles the glossary with everything that changed since it was last reconciled. It shows each difference and changes only what you approve.
 
 ## What it's not for
@@ -25,17 +25,17 @@ A directory, `documentation/conventions/glossary/` (or the same under `docs/` or
 
 ```
 glossary/
-  INDEX.md          watch list, term index, naming rules, open decisions
-  fulfilment.md     one file per data entity or feature
-  order.md
+  INDEX.md              watch list, term index, naming rules, open decisions
+  bookings.md           one file per group: a feature, workflow or entity family
+  service-delivery.md
 ```
 
-`INDEX.md` is the one file an agent must read before naming things. It opens with a **watch list** of the collisions most likely to cause harm, followed by an alphabetical **term index** that says which concept owns each word. Each group file has a short definition and its business name, relationships and vocabulary. Its frontmatter holds the decisions the script checks: the group's code identifiers, the paths its code lives in, and its **Avoid** entries.
+`INDEX.md` is the entry file, and the first thing Check reads. It opens with a **watch list** of the collisions most likely to cause harm, followed by an alphabetical **term index** that says which concept owns each word. Each group file covers one family of entities that are built and changed together, such as everything from booking to payment. It has a short overview, then a section per entity with its definition, business name, relationships and vocabulary. Its frontmatter holds the decisions the script checks: the group's code identifiers, the paths its code lives in, and its **Avoid** entries.
 
 Avoid entries come in two kinds:
 
-- **Lost variants** are names that lost a decision (`Client`, when the team chose `Customer`). They're flagged anywhere in new code.
-- **Reserved terms** are words that belong to another concept ("order" inside Fulfilment code). They're flagged only inside that group's paths, because elsewhere the word may be right.
+- **Lost variants** are names that lost a decision (`Client`, when the team chose `Customer`). They're flagged anywhere in new code, or only in the paths you give, for rules that depend on the layer (`customer` in backend code, `patient` in frontend code).
+- **Reserved terms** are words that belong to another group ("order", which belongs to Bookings, inside Service delivery code). They're flagged only inside that group's paths, because elsewhere the word may be right.
 
 See [`references/example-glossary/`](references/example-glossary/) for a finished glossary.
 
@@ -54,7 +54,7 @@ See [`references/example-glossary/`](references/example-glossary/) for a finishe
 
 If your team wants this on a schedule, set it up with your own tools (cron, CI, a scheduled agent). The skill doesn't assume one.
 
-Once the glossary is written, the skill offers two lines for `CLAUDE.md` or `AGENTS.md`. The first tells agents to read the glossary before naming things. The second tells them to run Check when they finish a feature.
+Once the glossary is written, the skill offers one line for `CLAUDE.md` or `AGENTS.md`, telling agents to run Check when they finish a feature. Agents aren't asked to read the glossary before they start. It works like a linter: a sweep over the diff afterwards, which costs nothing on tasks that don't need it.
 
 ## The check script
 
@@ -93,8 +93,12 @@ The tests build small fixture repositories in a temp directory. They need git.
 
 These weren't covered by the design plan and were decided while building the skill:
 
-- **The owning group's code is always allowed.** Inside Fulfilment's paths, "order" is reserved, but `Order` and `orderId` (from Order's `code` list) aren't flagged, because referring to the real Order by its own name is correct. A bare `order` variable or `activeOrders` still is.
-- **Mentions decide what Check looks at outside known paths.** The plan's semantic pass covered "the new identifiers in the diff". The script narrows that to new names that use a group's word: its name, or a term the term index links to it. Names that already existed at the base aren't new, so they aren't listed. `--paths` doesn't list mentions.
+- **Groups are families, not single entities.** The plan's "one file per group (data entity or feature)" is read as one file per feature, workflow or entity family, with a section per entity. Term index rows link to the entity's section with an anchor.
+- **Recorded names and longer terms aren't flagged.** A group's own `code` is never flagged by its own Avoid entries, and a match inside a longer term from the term index ("order" inside `orderLineItems`, when "order line item" is indexed) is skipped. On a real codebase this cut a reserved term's hits from 462 to 170.
+- **`only_in` for layer rules.** A lost variant can be limited to some paths, so "customer in backend code, patient in frontend code" is checked by the script. This is a new optional field; the schema stays at version 1.
+- **The owning group's code is always allowed.** Inside Service delivery's paths, "order" is reserved, but `Order` and `orderId` (from Bookings' `code` list) aren't flagged, because referring to the real Order by its own name is correct. A bare `order` variable or `activeOrders` still is.
+- **No "read before naming" instruction.** The plan's wiring had two lines. Only "run Check after a feature" is kept, so the glossary costs nothing on tasks that don't need it.
+- **Mentions decide what Check looks at outside known paths.** The plan's semantic pass covered "the new identifiers in the diff". The script narrows that to new names that use a group's word, meaning a term the term index links to it. Names that already existed at the base aren't new, so they aren't listed. `--paths` doesn't list mentions.
 - **Prose and lockfiles aren't checked.** `.md`, `.mdx`, `.txt`, `.rst`, `.adoc` and lockfiles are skipped, because prose may rightly use business names.
 - **A path without wildcards covers everything under it,** so `src/billing` works like `src/billing/**`.
 - **Plain scalars that YAML would misread must be quoted.** The frontmatter subset also requires quotes for values starting with `*`, `&`, `!`, `|`, `>` and similar, so that every glossary file is still valid YAML. A glob starting with `**` must be quoted.

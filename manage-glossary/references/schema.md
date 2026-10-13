@@ -8,21 +8,36 @@ The frontmatter holds the decisions the script checks. It's kept deliberately sm
 |---|---|---|
 | `schema` | every file | Format version. Currently `1`. Update migrates older versions. |
 | `reconciled_at` | INDEX.md | Short commit hash the glossary was last reconciled against. Set by Create and Update. |
-| `group` | group file | Group name, exactly as the term index links it (`[Fulfilment](fulfilment.md)`). |
-| `paths` | group file | Globs for the code that belongs to this group (`*`, `**` and `?`). A path with no wildcards covers everything under it. Optional: shared concepts can have none. |
-| `code` | group file | The concept's code identifiers: model, table, key, and the main collection and variable names. Integrity checks that each still exists. |
+| `group` | group file | Name of the family (a feature, workflow or set of related entities), exactly as the term index links it (`[Service delivery](service-delivery.md#visit)`). |
+| `paths` | group file | Globs for the code that belongs to this family (`*`, `**` and `?`). A path with no wildcards covers everything under it. Optional: families used across the codebase can have none. |
+| `code` | group file | Code identifiers for every entity in the family: model, table, key, and the main collection and variable names. Integrity checks that each still exists. |
 | `avoid` | group file | Block list of Avoid entries (below). |
 | `avoid[].term` | group file | A word not to use in code. Write it in the singular; plurals are matched automatically. Multi-word terms are space-separated (`payment status`). |
 | `avoid[].reason` | group file | Why, in one short clause. Required for lost variants. Reserved terms don't need one, because the linked group is the reason. |
 | `avoid[].reserved_by` | group file | The term belongs to that group. Flag it only inside this group's `paths`. |
 | `avoid[].allow` | group file | Identifiers that contain the term but are fine (`sortOrder`, `orderBy`). Exact, case-sensitive identifiers. |
+| `avoid[].only_in` | group file | Lost variants only: globs where the term is wrong. Without it, the term is wrong everywhere. For rules that depend on the layer, such as "`customer` in backend code, `patient` in frontend code". |
 
 Two kinds of Avoid entry:
 
-- **Lost variants** (no `reserved_by`) are names that lost a decision, or business names that don't belong in code. They're flagged anywhere in new code.
+- **Lost variants** (no `reserved_by`) are names that lost a decision, or business names that don't belong in code. They're flagged anywhere in new code, or only in the `only_in` paths if it's set. A word that's right in one layer and wrong in another becomes two entries, each with its own `only_in`:
+
+  ```yaml
+  avoid:
+    - term: patient
+      reason: "backend code says customer"
+      only_in: [server/**]
+    - term: customer
+      reason: "frontend code says patient"
+      only_in: [client/**]
+  ```
 - **Reserved terms** (`reserved_by`) are words that belong to another group. They're flagged only inside this group's `paths`, because outside them the word may be right. A reserved term in a group with no `paths` is never flagged by the script; Check's semantic pass still looks for it.
 
-Inside a reserving group's paths, the owning group's own `code` identifiers are always allowed. Referring to the real Order as `Order` or `orderId` from Fulfilment code is correct, so those aren't flagged. A bare `order` variable, or `activeOrders`, still is.
+Identifiers that are never flagged, without needing `allow`:
+
+- **The group's own `code`.** A group's recorded names aren't flagged by its own Avoid entries.
+- **The owning group's `code`, for reserved terms.** Referring to the real Order as `Order` or `orderId` from Service delivery code is correct. A bare `order` variable, or `activeOrders`, is still flagged.
+- **Longer indexed terms.** If the term is part of a longer term in the term index, a match inside that longer term isn't flagged, because the longer term names a different concept. With "order line item" indexed, a reserved "order" doesn't flag `orderLineItems`, but it still flags `orderLineCount`.
 
 ## Matching
 
@@ -30,11 +45,12 @@ How a term matches an identifier, for the script and for running Check by hand:
 
 - Split identifiers and file names into words at camelCase, PascalCase, snake_case, kebab-case and SCREAMING_CASE boundaries, and compare in lowercase. `activeJobs` → `active jobs`; `HTTPJobQueue` → `http job queue`.
 - A term matches when its words appear consecutively among the identifier's words, and the last word may be plural (`job` → `jobs`; `entity` → `entities`; `payment status` → `paymentStatuses`). A term doesn't match part of a word: `job` doesn't match `jobber`, and `order` doesn't match `ordered`.
-- Skip identifiers in `allow`.
+- Skip identifiers in `allow`, the group's own `code`, and for reserved terms the owning group's `code`. Skip a match that falls inside a longer term from the term index.
+- Apply reserved terms only inside the group's `paths`, and lost variants with `only_in` only inside those globs.
 - Skip string literals and comments (quotes, `//`, `/* */`, `#` and `--` comments), because UI copy may rightly use the business name. This is best effort; judge the result.
 - Check only files git tracks or would track (`.gitignore` is respected). Never check the glossary itself, prose files (`.md`, `.mdx`, `.txt`, `.rst`, `.adoc`) or lockfiles.
 
-**Mentions** (`--diff` only) use the same word matching against each group's vocabulary: its `group` name, plus every term the term index links to it. Parenthetical notes in the term cell are ignored. A mention is an identifier in the added lines or new file names that matches a group's vocabulary and:
+**Mentions** (`--diff` only) use the same word matching against each group's vocabulary: every term the term index links to it. The `group` name itself isn't used, because it labels a family rather than naming something in code. Parenthetical notes in the term cell are ignored. A mention is an identifier in the added lines or new file names that matches a group's vocabulary and:
 - isn't already a candidate
 - isn't in any `code` or `allow` list
 - didn't exist at the base commit
@@ -48,7 +64,7 @@ Node has no built-in YAML parser and the script has no dependencies, so frontmat
 Allowed:
 
 - The block between the first two `---` lines. The file must start with `---`.
-- Top-level `key: value` pairs. Values are plain scalars (`group: Fulfilment`, `schema: 1`) or double-quoted strings, with `\"` and `\\` as the only escapes.
+- Top-level `key: value` pairs. Values are plain scalars (`group: Service delivery`, `schema: 1`) or double-quoted strings, with `\"` and `\\` as the only escapes.
 - Flow lists of plain scalars or double-quoted strings: `paths: [src/fulfilment/**, src/web/fulfilment/**]`.
 - One block list of mappings per key, as used by `avoid`. Each item starts with `  - key: value`, and its other keys are indented to line up under the first. Item values are scalars, quoted strings or flow lists.
 - Whole-line `#` comments and blank lines.
@@ -60,14 +76,14 @@ Not allowed: anchors and aliases, multi-line strings, nested mappings beyond the
 ```yaml
 ---
 schema: 1
-group: Fulfilment
+group: Service delivery
 paths: [src/fulfilment/**, "**/fulfilment-*.ts"]
-code: [Fulfilment, fulfilments, fulfilmentId, activeFulfilments]
+code: [Fulfilment, fulfilments, fulfilmentId, activeFulfilments, Visit, visits]
 avoid:
   - term: job
     reason: "UI-only name (Job in the staff app); code has used Fulfilment since the 2024 rename"
   - term: order
-    reserved_by: Order
+    reserved_by: Bookings
     allow: [sortOrder, orderBy]
 ---
 ```

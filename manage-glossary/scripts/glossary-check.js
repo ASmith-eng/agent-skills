@@ -314,6 +314,7 @@ function readGroup({ data, lines }, rel, name, glossary) {
       reason: typeof item.reason === 'string' ? item.reason : '',
       reservedBy: typeof item.reserved_by === 'string' ? item.reserved_by : '',
       allow: toList(item.allow),
+      onlyIn: toList(item.only_in),
       line,
     };
     if (!entry.reservedBy && !entry.reason) {
@@ -326,33 +327,45 @@ function readGroup({ data, lines }, rel, name, glossary) {
 
 function buildRules(glossary) {
   const byName = new Map(glossary.groups.filter((g) => g.name).map((g) => [g.name, g]));
+  const indexTerms = readTermIndex(glossary.index.text).rows.map((row) => splitWords(cleanTerm(row.term))).filter((w) => w.length);
   const rules = [];
   for (const group of glossary.groups) {
     for (const entry of group.avoid) {
-      const allow = new Set(entry.allow);
+      // A group's own recorded names are never flagged by its own entries.
+      const allow = new Set([...entry.allow, ...group.code]);
+      const words = splitWords(entry.term);
+      if (words.length === 0) continue;
       const rule = {
         kind: entry.reservedBy ? 'reserved' : 'avoid',
         term: entry.term,
-        words: splitWords(entry.term),
+        words,
+        // Longer indexed terms containing this one name other concepts ("customer protocol" isn't "customer").
+        longerTerms: indexTerms.filter((t) => t.length > words.length && matchStarts(t, words).length > 0),
         group: group.name || group.fileName,
         groupFile: group.file,
         reason: entry.reason,
         reservedBy: entry.reservedBy,
         allow,
-        inPaths: null,
+        appliesTo: () => true,
       };
-      if (rule.words.length === 0) continue;
       if (entry.reservedBy) {
-        // Naming the owning concept by its own identifiers (orderId inside Fulfilment) is correct.
+        // Naming the owning concept by its own identifiers (orderId inside Service delivery) is correct.
         const owner = byName.get(entry.reservedBy);
         if (owner) owner.code.forEach((id) => allow.add(id));
         const matchers = group.paths.map(globMatcher);
-        rule.inPaths = (file) => matchers.some((m) => m(file));
+        rule.appliesTo = (file) => matchers.some((m) => m(file));
+      } else if (entry.onlyIn.length) {
+        const matchers = entry.onlyIn.map(globMatcher);
+        rule.appliesTo = (file) => matchers.some((m) => m(file));
       }
       rules.push(rule);
     }
   }
   return rules;
+}
+
+function cleanTerm(term) {
+  return term.replace(/\([^)]*\)/g, '').replace(/`/g, '').trim().toLowerCase();
 }
 
 // ---------------------------------------------------------------------------
@@ -416,10 +429,11 @@ function pluralsOf(word) {
   return forms;
 }
 
-// True when the term's words appear consecutively in the identifier's words.
+// Start positions where the term's words appear consecutively in the identifier's words.
 // Only the last word may be plural, so "payment status" matches paymentStatuses.
-function matchesTerm(words, termWords) {
+function matchStarts(words, termWords) {
   const last = pluralsOf(termWords[termWords.length - 1]);
+  const starts = [];
   for (let i = 0; i + termWords.length <= words.length; i++) {
     let ok = true;
     for (let j = 0; j < termWords.length; j++) {
@@ -429,9 +443,20 @@ function matchesTerm(words, termWords) {
         break;
       }
     }
-    if (ok) return true;
+    if (ok) starts.push(i);
   }
-  return false;
+  return starts;
+}
+
+function matchesTerm(words, termWords) {
+  return matchStarts(words, termWords).length > 0;
+}
+
+// True when the rule's term appears in the identifier other than as part of a longer indexed term:
+// with "customer protocol" indexed, "customer" matches customerList but not customerProtocolIds.
+function matchesRule(words, rule) {
+  const longer = rule.longerTerms.flatMap((t) => matchStarts(words, t).map((s) => [s, s + t.length]));
+  return matchStarts(words, rule.words).some((i) => !longer.some(([s, e]) => s <= i && i + rule.words.length <= e));
 }
 
 // Best effort: blanks out string literals and comments, keeping newlines so line numbers hold.
@@ -528,13 +553,13 @@ function scanFile(root, file, { lines, newName }) {
 }
 
 function findCandidates(file, occurrences, rules) {
-  const applicable = rules.filter((r) => r.kind === 'avoid' || r.inPaths(file));
+  const applicable = rules.filter((r) => r.appliesTo(file));
   const candidates = [];
   const seen = new Set();
   for (const { line, identifier } of occurrences) {
     const words = splitWords(identifier);
     for (const rule of applicable) {
-      if (rule.allow.has(identifier) || !matchesTerm(words, rule.words)) continue;
+      if (rule.allow.has(identifier) || !matchesRule(words, rule)) continue;
       const key = `${line}|${identifier}|${rule.term}|${rule.group}`;
       if (seen.has(key)) continue;
       seen.add(key);
@@ -555,16 +580,16 @@ function findCandidates(file, occurrences, rules) {
   return candidates;
 }
 
-// Each group's words: its name, plus every term the term index links to it.
+// Each group's words: every term the term index links to it. The group's own name is a label
+// for a family ("Service delivery"), not a word used in code, so it isn't included.
 function buildVocabulary(glossary) {
   const vocabulary = [];
   const rows = readTermIndex(glossary.index.text).rows;
   for (const group of glossary.groups) {
     const terms = new Set();
-    if (group.name) terms.add(group.name.toLowerCase());
     for (const row of rows) {
       if (!row.links.some((l) => path.posix.basename(l.target) === group.fileName)) continue;
-      const term = row.term.replace(/\([^)]*\)/g, '').replace(/`/g, '').trim().toLowerCase();
+      const term = cleanTerm(row.term);
       if (term) terms.add(term);
     }
     for (const term of terms) {
@@ -746,6 +771,17 @@ function checkIntegrity(root, glossary, allFiles) {
       const match = globMatcher(glob);
       if (!allFiles.some(match)) {
         problems.push({ check: 'paths', file: group.file, line: group.lines.paths, message: `paths glob \`${glob}\` matches no files` });
+      }
+    }
+    for (const entry of group.avoid) {
+      if (entry.onlyIn.length && entry.reservedBy) {
+        warnings.push({ file: group.file, line: entry.line, message: `"${entry.term}" has both reserved_by and only_in; only_in is ignored for reserved terms` });
+        continue;
+      }
+      for (const glob of entry.onlyIn) {
+        if (!allFiles.some(globMatcher(glob))) {
+          problems.push({ check: 'paths', file: group.file, line: entry.line, message: `only_in glob \`${glob}\` for "${entry.term}" matches no files` });
+        }
       }
     }
   }
