@@ -69,7 +69,7 @@ The team's decided patterns. This catalog isn't exhaustive: it covers scenarios 
 - **Don't copy (area-wide):** only legacy that spans an area or more, such as an abandoned folder structure or a `legacy/` tree. Legacy approaches to one problem go in that capability. An entry that would forbid something a row prescribes names the exception, as for capability Don't copy below. If there's none, leave the section out.
 - **Style (cross-cutting):** only rules that apply in every area, aren't naming, and no tool enforces, where the code shows, or an agent might use, two ways of doing the same thing. If the project has a glossary or naming doc, add one line linking to it. If not, don't create naming rules. State a rule's scope where it's ambiguous, as for capability Style below. Leave the section out if there's nothing.
 - **Tooling:** one or two lines listing the config files. Don't summarise their rules.
-- **Open decisions:** one line each, linking to its capability. If there are none, write `None.`
+- **Open decisions:** one line each, linking to its capability. An entry that names candidate house helpers gives each its module and call shape, as a Pattern cell would: agents will reach for them before the decision is made. If there are none, write `None.`
 
 ## Area file
 
