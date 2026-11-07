@@ -85,7 +85,7 @@ After writing, offer these. Don't apply them automatically.
 
   > Before designing a feature, read the Architecture section (including Don't introduce) and the Capability map section of `documentation/conventions/patterns/INDEX.md`, then the capability section for the problem you're solving. Put new code where the Architecture section says, and don't invent new layers or folder conventions. Use the listed pattern for each scenario and model new code on its exemplar. Never copy anything listed under Don't copy, and never bring in anything listed under Don't introduce. If a scenario isn't listed, follow the placement table and the neighbouring code; ask only if there's no clear precedent.
 
-  > When you finish a feature, offer to run the `manage-patterns` skill's Check mode on your changes.
+  > When you finish a feature, offer to run the `house-style` skill's Check mode on your changes.
 
   Use the catalog's real path in the first line.
 

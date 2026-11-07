@@ -1,9 +1,9 @@
 ---
-name: manage-patterns
+name: house-style
 description: Create, check and update a project's patterns catalog (documentation/conventions/patterns/). It records the team's decided architecture and where each kind of code goes, which pattern to use for each problem scenario with one exemplar file, house variants that differ from the textbook, patterns decided but not built yet, house style tools don't enforce, and legacy code not to copy. The goal is that agents stop reinventing utilities, adding a second way of doing something, copying legacy code or putting code in the wrong layer. Use it to document codebase conventions, coding patterns, architecture or "how we do things here" for agents. Use it to review finished code against the catalog ("check my changes follow our patterns", "is this the right pattern here", "review this against our conventions", before a PR or after a feature). Use it to bring the catalog up to date after code changes or a release, record a newly decided pattern, or settle open decisions. It only writes the catalog; it never refactors or edits code. Naming and domain vocabulary belong to a glossary, not here.
 ---
 
-# manage-patterns
+# house-style
 
 Write and maintain a project's patterns catalog: the architecture new code follows, the pattern for each problem scenario with an exemplar to copy, the house style tools don't enforce, and what not to copy. Then check new code against it.
 
