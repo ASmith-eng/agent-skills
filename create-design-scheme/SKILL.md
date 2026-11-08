@@ -1,9 +1,9 @@
 ---
-name: design-spec
+name: create-design-scheme
 description: Write or update a project's DESIGN.md — the design-system spec (color, typography, spacing, components, interaction, accessibility, voice) that keeps developers and AI agents building UI consistently. Works for any HTML/CSS/JavaScript project or framework (React, Vue, Svelte, Angular, plain HTML, Bootstrap, Tailwind, MUI…). Builds the spec from a reference screen in the codebase or a running URL, a mockup (HTML/CSS prototype, SVG, design-token JSON, Figma), structured questions, or any mix. Use this whenever someone wants to document their UI/UX rules, create a design system doc, capture "how our app should look", write design guidelines for agents, or bring an existing DESIGN.md back in line with the current design — even if they don't say "DESIGN.md". Not for auditing code against a spec or for designing a new look.
 ---
 
-# design-spec
+# Create Design Scheme
 
 Produce a `DESIGN.md`: a single document that states how a product looks and behaves, so everyone building its UI - people and agents - make the same choices without re-deciding them.
 

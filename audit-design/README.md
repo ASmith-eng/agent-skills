@@ -1,4 +1,4 @@
-# Design Audit
+# Audit Design
 
 [![Node.js: required](https://img.shields.io/badge/Node.js-required-5FA04E?logo=nodedotjs&logoColor=white)](#requirements)
 [![ripgrep: required](https://img.shields.io/badge/ripgrep-required-blue)](#requirements)
@@ -6,7 +6,7 @@
 
 An AI agent skill that audits a page or component against your project's `DESIGN.md` and reports what doesn't match: off-token colors and spacing, the wrong status chips, misplaced actions, missing empty and error states, and accessibility failures.
 
-You write the design rules once in `DESIGN.md`, and this skill checks your code against them. You get the same scored report every time, so you know what to fix first and whether a page is getting better or worse.
+You write the design rules once in `DESIGN.md`, and this skill checks your code against them. This skill produces a concise, prioritised report in a fixed format, so you know what to fix first and whether a page is getting better or worse.
 
 ## What it's for
 
@@ -16,7 +16,7 @@ You write the design rules once in `DESIGN.md`, and this skill checks your code 
 
 ## What it's not for
 
-- **Writing or changing your design rules.** The skill reads `DESIGN.md` and never adds rules of its own. If you don't have a spec yet, write one first, by hand or with a skill like [manage-design-scheme](../manage-design-scheme).
+- **Writing or changing your design rules.** The skill reads `DESIGN.md` and never adds rules of its own. If you don't have a spec yet, write one first, by hand or with a skill like [create-design-scheme](../create-design-scheme).
 - **Fixing the code.** It reports findings and suggested fixes; applying them is up to you or your agent.
 - **Testing in a browser.** It audits source code only. It doesn't start a dev server or take screenshots, so final sign-off still needs someone to use the page.
 
@@ -24,7 +24,7 @@ You write the design rules once in `DESIGN.md`, and this skill checks your code 
 
 **Your spec is the only authority.** Every finding quotes the rule it breaks from your `DESIGN.md`. If your spec has a token block in its front matter, any color, size, radius, spacing or shadow value not in that block is reported.
 
-**It's repeatable.** Mechanical checks (search patterns for each stack) run first, so their results are facts, not opinions. The judgement checks then run in a fixed order, so two audits of the same page are comparable.
+**It's repeatable.** Mechanical checks (search patterns for each stack) run first, returning deterministic calculations. The judgement checks then run in a fixed order, so two audits of the same page are comparable.
 
 **The report is easy to act on.** It has the same parts every time:
 

@@ -1,4 +1,4 @@
-# Manage Design Scheme (DESIGN.md)
+# Create Design Scheme (DESIGN.md)
 
 [![Node.js: required](https://img.shields.io/badge/Node.js-required-5FA04E?logo=nodedotjs&logoColor=white)](#requirements)
 [![npx: network access](https://img.shields.io/badge/npx-network_access-CB3837?logo=npm&logoColor=white)](#requirements)

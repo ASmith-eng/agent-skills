@@ -1,9 +1,9 @@
 ---
-name: design-audit
+name: audit-design
 description: Run a design audit on a page or component — check its source against the project's DESIGN.md for spacing, color, typography, status chips, action placement and accessibility, and report scored findings. Works for any HTML/CSS/JavaScript project or framework (React, Vue, Svelte, Angular, plain HTML, Bootstrap, Tailwind, MUI…). Use when asked to audit, review or check the visual design of an existing page against the design system, e.g. "run a design audit on the orders page". Reviews source code, not a running app.
 ---
 
-# Design Audit
+# Audit Design
 
 Audit a page against the project's `DESIGN.md` and report findings in a fixed shape.
 
