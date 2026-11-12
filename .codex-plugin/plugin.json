@@ -1,0 +1,19 @@
+{
+  "name": "consistent-coding",
+  "version": "0.1.0",
+  "description": "Skillset to improve agent output to match the way your team likes to code, helping each fresh session get things right first time.",
+  "author": {
+    "name": "ASmith-eng",
+    "url": "https://github.com/ASmith-eng"
+  },
+  "repository": "https://github.com/ASmith-eng/agent-skills",
+  "license": "AGPL-3.0",
+  "keywords": ["skills", "conventions", "design-system", "glossary", "documentation"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Consistent Coding",
+    "shortDescription": "Teach agents your team's design system, patterns and vocabulary",
+    "developerName": "ASmith-eng",
+    "category": "Developer Tools"
+  }
+}

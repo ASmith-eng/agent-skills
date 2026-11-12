@@ -1,0 +1,14 @@
+{
+  "name": "asmith-consistent-coding",
+  "description": "Marketplace for consistent-coding",
+  "owner": {
+    "name": "ASmith-eng"
+  },
+  "plugins": [
+    {
+      "name": "consistent-coding",
+      "source": "./",
+      "description": "Skillset to improve agent output to match the way your team likes to code, helping each fresh session get things right first time."
+    }
+  ]
+}
