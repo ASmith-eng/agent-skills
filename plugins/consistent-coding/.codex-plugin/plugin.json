@@ -1,7 +1,7 @@
 {
   "name": "consistent-coding",
   "version": "0.1.0",
-  "description": "Skillset to improve agent output to match the way your team likes to code, helping each fresh session get things right first time.",
+  "description": "Skillset to match agent output with the way your team likes to code, backend and frontend, helping each fresh session get things right first time.",
   "author": {
     "name": "ASmith-eng",
     "url": "https://github.com/ASmith-eng"

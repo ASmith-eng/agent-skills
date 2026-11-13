@@ -1,14 +1,19 @@
 {
-  "name": "asmith-consistent-coding",
-  "description": "Marketplace for consistent-coding",
+  "name": "asmith-agent-skills",
+  "description": "Skills for working consistently with real codebases",
   "owner": {
     "name": "ASmith-eng"
   },
   "plugins": [
     {
       "name": "consistent-coding",
-      "source": "./",
-      "description": "Skillset to improve agent output to match the way your team likes to code, helping each fresh session get things right first time."
+      "source": "./plugins/consistent-coding",
+      "description": "Skillset to match agent output with the way your team likes to code, backend and frontend, helping each fresh session get things right first time."
+    },
+    {
+      "name": "clarity",
+      "source": "./plugins/clarity",
+      "description": "Keeps you on the same page as your agents."
     }
   ]
 }

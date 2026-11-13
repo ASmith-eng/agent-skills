@@ -1,0 +1,11 @@
+{
+  "name": "clarity",
+  "version": "0.1.0",
+  "description": "Keeps you on the same page as your agents",
+  "author": {
+    "name": "ASmith-eng"
+  },
+  "repository": "https://github.com/ASmith-eng/agent-skills",
+  "license": "AGPL-3.0",
+  "keywords": ["skills", "explanation", "understanding", "communication"]
+}
