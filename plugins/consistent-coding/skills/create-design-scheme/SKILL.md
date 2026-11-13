@@ -94,7 +94,7 @@ Before writing, check every text/background pair the spec defines, plus control 
 node <skill-dir>/scripts/contrast-check.js "body=#1c1917:#ffffff" "muted=#57534e:#faf9f7" "on-primary=#ffffff:#115e59" "input-border=#78716c:#ffffff:3" "focus=#115e59:#ffffff:3"
 ```
 
-Pairs are `label=FOREGROUND:BACKGROUND[:MIN]`; MIN defaults to 4.5 (text), use 3 for large text and non-text UI. Check text colors against every surface they sit on, and each status text against its own tint. Only apply 3:1 to a border when it's needed to identify a control — decorative dividers are exempt (see 1.4.11 in `core-practices.md`).
+Pairs are `label=FOREGROUND:BACKGROUND[:MIN]`; MIN defaults to 4.5 (text), use 3 for large text and non-text UI. Colors can be hex, `rgb()` or `oklch()`, and the two sides of a pair can differ, so pass `oklch()` values as the source writes them: `"muted=oklch(0.55 0.01 60):#ffffff"`. The output shows the hex each `oklch()` color resolves to, which is the value the spec records. A color flagged `outside sRGB, clipped` has no exact hex: tell the user, since the hex and the ratio describe what an sRGB screen shows. Check text colors against every surface they sit on, and each status text against its own tint. Only apply 3:1 to a border when it's needed to identify a control — decorative dividers are exempt (see 1.4.11 in `core-practices.md`).
 
 When a pair fails, report the ratio and the requirement — "muted text `#9ca3af` on `#ffffff` is 2.54:1; WCAG 1.4.3 requires 4.5:1" — and ask how they want to proceed. Don't propose a replacement color unless they ask. If they keep the value, write it as given, and add one short line to the Accessibility section stating the failure, so agents know not to rely on that pair: "`muted-foreground` on `background` is 2.54:1 and does not meet 1.4.3." Write only that line, with no history or justification.
 
@@ -142,4 +142,4 @@ Avoid `@`-importing the spec into `CLAUDE.md` — that loads it into every sessi
 | `references/core-practices.md` | Accessibility, UX practices and conventions, by tier | Asking about departures; drafting |
 | `references/template.md` | Spec structure, format rules and writing rules | Drafting; Update mode |
 | `references/example-DESIGN.md` | A finished spec for a fictional product. Never copy its values. | Drafting (Create) |
-| `scripts/contrast-check.js` | WCAG contrast checker, Node, no dependencies | Run it; no need to read it |
+| `scripts/contrast-check.js` | WCAG contrast checker for hex, `rgb()` and `oklch()` colors, Node, no dependencies | Run it; no need to read it |

@@ -27,7 +27,7 @@ Start from the route or component the user names. Read it, its child components,
 | Vue / Svelte / Angular | the same CSS/SCSS/Tailwind sources, plus `<style>` blocks in components |
 | Design-token build | `tokens/*.json`, Style Dictionary config |
 
-Resolve indirections to final values: a Tailwind class (`bg-primary`) → its CSS variable → its hex; `hsl()`/`oklch()` → hex. The spec records the resolved value.
+Resolve indirections to final values: a Tailwind class (`bg-primary`) → its CSS variable → its hex; `hsl()`/`oklch()` → hex. The spec records the resolved value. For `oklch()`, don't convert by hand: `scripts/contrast-check.js` prints the hex alongside the contrast result.
 
 **When values aren't centralised** (older codebases with colors inline in stylesheets), search the view's styles for color, font-size, spacing, radius and shadow values, and list what the view actually uses. If the same role appears with several values (four slightly different greys for secondary text), don't pick one — show the user the values and ask which is intended.
 
